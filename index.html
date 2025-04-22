@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Deepfake Detector</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            background-color: #f1f1f1;
+            transition: background-color 0.3s;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+            border-bottom: none;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-button {
+            border: 2px solid #4CAF50;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .file-input-button:hover {
+            background-color: #45a049;
+        }
+        .file-input {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-name {
+            margin-left: 10px;
+            font-style: italic;
+        }
+        .submit-btn {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: block;
+            width: 100%;
+            max-width: 200px;
+        }
+        .submit-btn:hover {
+            background-color: #1a252f;
+        }
+        .submit-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+        .results.real {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+        .results.fake {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        .verdict {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .verdict.real {
+            color: #28a745;
+        }
+        .verdict.fake {
+            color: #dc3545;
+        }
+        .prediction-details {
+            margin-top: 20px;
+        }
+        .model-prediction {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .model-prediction:last-child {
+            border-bottom: none;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        .hidden {
+            display: none;
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e2f3fd;
+        }
+        .session-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Progress bar styles */
+        .progress-container {
+            margin-top: 20px;
+            position: relative;
+        }
+        .progress-bar-bg {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+            border-radius: 10px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .table th, .table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+        .confidence-bar {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .confidence-level {
+            height: 100%;
+            background-color: #17a2b8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Deepfake Detector</h1>
+        
+        <div class="tab-container">
+            <div class="tab active" data-tab="single-prediction">Single File Analysis</div>
+            <div class="tab" data-tab="stream-prediction">Stream Analysis</div>
+        </div>
+        
+        <!-- Single Prediction Tab -->
+        <div id="single-prediction" class="tab-content active">
+            <div class="form-group">
+                <label for="audio-file">Upload Audio File (.wav, .mp3, .flac, .ogg)</label>
+                <div class="file-input-container">
+                    <div class="file-input-button">Choose File</div>
+                    <input type="file" id="audio-file" class="file-input" accept=".wav,.mp3,.flac,.ogg">
+                </div>
+                <span class="file-name" id="file-name">No file chosen</span>
+            </div>
+            
+            <button id="predict-btn" class="submit-btn" disabled>Analyze Audio</button>
+            
+            <div id="loader-single" class="loader hidden"></div>
+            <div id="error-message-single" class="error-message hidden"></div>
+            
+            <div id="results-single" class="results hidden">
+                <div id="verdict-single" class="verdict"></div>
+                <div class="prediction-details">
+                    <h3>Model Predictions</h3>
+                    <div class="model-prediction">
+                        <span>Model 1:</span>
+                        <span id="model1-prediction"></span>
+                    </div>
+                    <div class="model-prediction">
+                        <span>Model 2:</span>
+                        <span id="model2-prediction"></span>
+                    </div>
+                    <div class="model-prediction">
+                        <span>Model 3:</span>
+                        <span id="model3-prediction"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stream Prediction Tab -->
+        <div id="stream-prediction" class="tab-content">
+            <div class="session-info hidden" id="session-info">
+                <strong>Session ID:</strong> <span id="session-id"></span>
+                <button id="delete-session-btn" class="submit-btn" style="margin-top: 10px; max-width: 150px;">Delete Session</button>
+            </div>
+            
+            <div id="session-start-container">
+                <p>Stream analysis allows you to upload an audio file for more detailed analysis.</p>
+                <button id="start-session-btn" class="submit-btn">Start New Session</button>
+            </div>
+            
+            <div id="file-upload-container" class="hidden">
+                <div class="form-group">
+                    <label for="stream-audio-file">Upload Audio File (.wav, .mp3, .flac, .ogg)</label>
+                    <div class="file-input-container">
+                        <div class="file-input-button">Choose File</div>
+                        <input type="file" id="stream-audio-file" class="file-input" accept=".wav,.mp3,.flac,.ogg">
+                    </div>
+                    <span class="file-name" id="stream-file-name">No file chosen</span>
+                </div>
+                
+                <button id="upload-stream-btn" class="submit-btn" disabled>Upload & Analyze</button>
+            </div>
+            
+            <div id="loader-stream" class="loader hidden"></div>
+            <div id="error-message-stream" class="error-message hidden"></div>
+            <div id="status-message" class="status-message hidden"></div>
+            
+            <div id="progress-container" class="progress-container hidden">
+                <p>Analysis in progress...</p>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar" id="progress-bar">0%</div>
+                </div>
+            </div>
+            
+            <div id="results-stream" class="results hidden">
+                <div id="verdict-stream" class="verdict"></div>
+                <div class="prediction-details">
+                    <h3>Analysis Details</h3>
+                    <table class="table">
+                        <tr>
+                            <th>Confidence</th>
+                            <td id="confidence-value">-</td>
+                        </tr>
+                        <tr>
+                            <th>Windows Analyzed</th>
+                            <td id="windows-analyzed">-</td>
+                        </tr>
+                        <tr>
+                            <th>Real Windows</th>
+                            <td id="real-windows">-</td>
+                        </tr>
+                        <tr>
+                            <th>Fake Windows</th>
+                            <td id="fake-windows">-</td>
+                        </tr>
+                    </table>
+                    
+                    <div>
+                        <p>Confidence Level:</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-level" id="confidence-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Single Prediction Elements
+        const audioFileInput = document.getElementById('audio-file');
+        const fileNameSpan = document.getElementById('file-name');
+        const predictBtn = document.getElementById('predict-btn');
+        const loaderSingle = document.getElementById('loader-single');
+        const errorMessageSingle = document.getElementById('error-message-single');
+        const resultsSingle = document.getElementById('results-single');
+        const verdictSingle = document.getElementById('verdict-single');
+        const model1Prediction = document.getElementById('model1-prediction');
+        const model2Prediction = document.getElementById('model2-prediction');
+        const model3Prediction = document.getElementById('model3-prediction');
+        
+        // Stream Prediction Elements
+        const startSessionBtn = document.getElementById('start-session-btn');
+        const sessionStartContainer = document.getElementById('session-start-container');
+        const fileUploadContainer = document.getElementById('file-upload-container');
+        const streamAudioFileInput = document.getElementById('stream-audio-file');
+        const streamFileName = document.getElementById('stream-file-name');
+        const uploadStreamBtn = document.getElementById('upload-stream-btn');
+        const loaderStream = document.getElementById('loader-stream');
+        const errorMessageStream = document.getElementById('error-message-stream');
+        const statusMessage = document.getElementById('status-message');
+        const sessionInfo = document.getElementById('session-info');
+        const sessionIdSpan = document.getElementById('session-id');
+        const deleteSessionBtn = document.getElementById('delete-session-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const resultsStream = document.getElementById('results-stream');
+        const verdictStream = document.getElementById('verdict-stream');
+        const confidenceValue = document.getElementById('confidence-value');
+        const windowsAnalyzed = document.getElementById('windows-analyzed');
+        const realWindows = document.getElementById('real-windows');
+        const fakeWindows = document.getElementById('fake-windows');
+        const confidenceBar = document.getElementById('confidence-bar');
+        
+        // API base URL - Change this to match your Flask API
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        // Current stream session ID
+        let currentSessionId = null;
+        let pollingInterval = null;
+        
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // File input handling for single prediction
+        audioFileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                fileNameSpan.textContent = this.files[0].name;
+                predictBtn.disabled = false;
+            } else {
+                fileNameSpan.textContent = 'No file chosen';
+                predictBtn.disabled = true;
+            }
+        });
+        
+        // File input handling for stream prediction
+        streamAudioFileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                streamFileName.textContent = this.files[0].name;
+                uploadStreamBtn.disabled = false;
+            } else {
+                streamFileName.textContent = 'No file chosen';
+                uploadStreamBtn.disabled = true;
+            }
+        });
+        
+        // Single Prediction
+        predictBtn.addEventListener('click', async () => {
+            if (!audioFileInput.files || !audioFileInput.files[0]) {
+                return;
+            }
+            
+            // Show loader, hide results and error
+            loaderSingle.classList.remove('hidden');
+            resultsSingle.classList.add('hidden');
+            errorMessageSingle.classList.add('hidden');
+            predictBtn.disabled = true;
+            
+            const file = audioFileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                verdictSingle.textContent = `Verdict: ${data.verdict}`;
+                verdictSingle.className = 'verdict';
+                verdictSingle.classList.add(data.verdict.toLowerCase());
+                
+                resultsSingle.className = 'results';
+                resultsSingle.classList.add(data.verdict.toLowerCase());
+                
+                model1Prediction.textContent = data.model_predictions.model1.toUpperCase();
+                model2Prediction.textContent = data.model_predictions.model2.toUpperCase();
+                model3Prediction.textContent = data.model_predictions.model3.toUpperCase();
+                
+                resultsSingle.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessageSingle.textContent = `Error: ${error.message}`;
+                errorMessageSingle.classList.remove('hidden');
+            } finally {
+                loaderSingle.classList.add('hidden');
+                predictBtn.disabled = false;
+            }
+        });
+        
+        // Start Stream Session
+        startSessionBtn.addEventListener('click', async () => {
+            loaderStream.classList.remove('hidden');
+            errorMessageStream.classList.add('hidden');
+            statusMessage.classList.add('hidden');
+            sessionStartContainer.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/stream/start`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentSessionId = data.session_id;
+                
+                // Show session info and file upload
+                sessionIdSpan.textContent = currentSessionId;
+                sessionInfo.classList.remove('hidden');
+                fileUploadContainer.classList.remove('hidden');
+                
+                // Show status message
+                statusMessage.textContent = data.message;
+                statusMessage.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessageStream.textContent = `Error: ${error.message}`;
+                errorMessageStream.classList.remove('hidden');
+                sessionStartContainer.classList.remove('hidden');
+            } finally {
+                loaderStream.classList.add('hidden');
+            }
+        });
+        
+        // Upload to Stream
+        uploadStreamBtn.addEventListener('click', async () => {
+            if (!streamAudioFileInput.files || !streamAudioFileInput.files[0] || !currentSessionId) {
+                return;
+            }
+            
+            // Show loader, hide results and error
+            loaderStream.classList.remove('hidden');
+            resultsStream.classList.add('hidden');
+            errorMessageStream.classList.add('hidden');
+            statusMessage.classList.add('hidden');
+            uploadStreamBtn.disabled = true;
+            
+            const file = streamAudioFileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/stream/${currentSessionId}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Show progress
+                progressContainer.classList.remove('hidden');
+                
+                // Start polling for status
+                startStatusPolling();
+                
+                // Show status message
+                statusMessage.textContent = data.message;
+                statusMessage.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessageStream.textContent = `Error: ${error.message}`;
+                errorMessageStream.classList.remove('hidden');
+                uploadStreamBtn.disabled = false;
+            } finally {
+                loaderStream.classList.add('hidden');
+            }
+        });
+        
+        // Delete Session
+        deleteSessionBtn.addEventListener('click', async () => {
+            if (!currentSessionId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/stream/${currentSessionId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Reset UI
+                resetStreamUI();
+                
+                // Show status message
+                statusMessage.textContent = "Session deleted successfully";
+                statusMessage.classList.remove('hidden');
+                
+                // Stop polling
+                stopStatusPolling();
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessageStream.textContent = `Error deleting session: ${error.message}`;
+                errorMessageStream.classList.remove('hidden');
+            }
+        });
+        
+        // Poll for session status
+        function startStatusPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            
+            let progressValue = 0;
+            
+            pollingInterval = setInterval(async () => {
+                if (!currentSessionId) {
+                    stopStatusPolling();
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/stream/${currentSessionId}/status`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update status based on response
+                    if (data.status === 'processing') {
+                        // Increment progress animation
+                        progressValue = Math.min(progressValue + 5, 90); // Cap at 90% until complete
+                        progressBar.style.width = `${progressValue}%`;
+                        progressBar.textContent = `${progressValue}%`;
+                    } else if (data.status === 'completed' && data.result) {
+                        // Show complete results
+                        progressBar.style.width = '100%';
+                        progressBar.textContent = '100%';
+                        
+                        // Stop polling
+                        stopStatusPolling();
+                        
+                        // Display results
+                        showStreamResults(data.result);
+                    } else if (data.status === 'error') {
+                        // Show error
+                        errorMessageStream.textContent = `Error: ${data.error || 'Unknown error during processing'}`;
+                        errorMessageStream.classList.remove('hidden');
+                        progressContainer.classList.add('hidden');
+                        
+                        // Stop polling
+                        stopStatusPolling();
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 1000); // Poll every second
+        }
+        
+        function stopStatusPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+        
+        function showStreamResults(result) {
+            // Hide progress container
+            progressContainer.classList.add('hidden');
+            
+            // Set verdict
+            verdictStream.textContent = `Verdict: ${result.verdict}`;
+            verdictStream.className = 'verdict';
+            verdictStream.classList.add(result.verdict.toLowerCase());
+            
+            // Set result styling
+            resultsStream.className = 'results';
+            resultsStream.classList.add(result.verdict.toLowerCase());
+            
+            // Set details
+            confidenceValue.textContent = `${result.confidence}%`;
+            
+            // Calculate total windows
+            const totalWindows = Object.values(result.window_predictions).reduce((sum, count) => sum + count, 0);
+            windowsAnalyzed.textContent = totalWindows;
+            
+            // Set real/fake window counts
+            realWindows.textContent = result.window_predictions.REAL || 0;
+            fakeWindows.textContent = result.window_predictions.FAKE || 0;
+            
+            // Set confidence bar
+            confidenceBar.style.width = `${result.confidence}%`;
+            
+            // Show results
+            resultsStream.classList.remove('hidden');
+        }
+        
+        function resetStreamUI() {
+            // Reset session
+            currentSessionId = null;
+            sessionInfo.classList.add('hidden');
+            fileUploadContainer.classList.add('hidden');
+            sessionStartContainer.classList.remove('hidden');
+            
+            // Reset file input
+            streamAudioFileInput.value = '';
+            streamFileName.textContent = 'No file chosen';
+            uploadStreamBtn.disabled = true;
+            
+            // Hide results and progress
+            resultsStream.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+        }
+
+        // Check API health on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (!response.ok) {
+                    throw new Error('API health check failed');
+                }
+                
+                console.log('API is healthy and connected');
+            } catch (error) {
+                console.error('API connection error:', error);
+                errorMessageSingle.textContent = 
+                    'Cannot connect to API server. Please ensure the Flask server is running.';
+                errorMessageSingle.classList.remove('hidden');
+                
+                errorMessageStream.textContent = 
+                    'Cannot connect to API server. Please ensure the Flask server is running.';
+                errorMessageStream.classList.remove('hidden');
+                
+                // Disable buttons
+                predictBtn.disabled = true;
+                startSessionBtn.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
