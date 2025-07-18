@@ -1,10 +1,10 @@
-# 🎙️ Real-Time Audio Deepfake Detection (Ensemble-Based)
+# Real-Time Audio Deepfake Detection (Ensemble-Based)
 
 This project is a real-time **deepfake audio detector** using an **ensemble of three ML models**. It supports both **microphone input** and **pre-recorded audio**. The ensemble method combines predictions from different models using unique features to deliver a robust verdict on whether the audio is real or fake.
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
 The system uses **three separate models** trained on different feature sets and audio durations:
 
@@ -18,7 +18,7 @@ An **ensemble predictor** takes the results from all models. If **any** model fl
 
 ---
 
-## 🎧 Model Training
+## Model Training
 
 This project uses an ensemble of three audio classification models, each trained on different audio preprocessing strategies:
 
@@ -33,15 +33,15 @@ This project uses an ensemble of three audio classification models, each trained
 
 These models are later ensembled to achieve more robust classification results across different audio lengths and characteristics.
 
-### 📂 Dataset
+### Dataset
 
 All models are trained on the **Fake or Real Dataset** available on Kaggle:
 
-🔗 [The Fake or Real Dataset – Kaggle](https://www.kaggle.com/datasets/mohammedabdeldayem/the-fake-or-real-dataset/)
+[The Fake or Real Dataset – Kaggle](https://www.kaggle.com/datasets/mohammedabdeldayem/the-fake-or-real-dataset/)
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ```bash
 .
@@ -57,17 +57,17 @@ All models are trained on the **Fake or Real Dataset** available on Kaggle:
 
 ---
 
-## 🎯 Features
+## Features
 
-- ✅ Real-time audio streaming with PyAudio
-- ✅ Fake detection from **microphone or audio file**
-- ✅ Dynamic preprocessing: normalization, noise reduction, high-pass filtering
-- ✅ Ensemble prediction for higher accuracy
-- ✅ Live prediction output and final majority vote
+- Real-time audio streaming with PyAudio
+- Fake detection from **microphone or audio file**
+- Dynamic preprocessing: normalization, noise reduction, high-pass filtering
+- Ensemble prediction for higher accuracy
+- Live prediction output and final majority vote
 
 ---
 
-## 🔧 Requirements
+## Requirements
 
 Install dependencies using:
 
@@ -75,13 +75,13 @@ Install dependencies using:
 pip install numpy tensorflow librosa joblib pyaudio soundfile pandas scipy
 ```
 
-> 🛠️ Note: On some platforms, PyAudio may need portaudio installed:
+> Note: On some platforms, PyAudio may need portaudio installed:
 > 
 > `sudo apt install portaudio19-dev` (Ubuntu) or use conda to install `pyaudio`.
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### 1. Run Detection From Audio File
 
@@ -107,7 +107,7 @@ clf.stop_audio_stream()
 
 ---
 
-## 📊 Output Example
+## Output Example
 
 ```
 🔍 Predicting for file: temp_stream.wav
@@ -123,10 +123,10 @@ FINAL VERDICT: This audio is most likely FAKE (66.7% of the windows agreed)
 
 ---
 
-## 📌 Notes
+## Notes
 
-- 📂 Models must be placed inside the `./models/` folder.
-- 🧪 Designed for binary classification: `real` vs `fake`.
+- Models must be placed inside the `./models/` folder.
+- Designed for binary classification: `real` vs `fake`.
 
 ## 🙌 Acknowledgements
 
